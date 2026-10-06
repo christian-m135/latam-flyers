@@ -75,7 +75,7 @@ def save(img, suffix):
 def render_1x1():
     W = H = 1080; img = new_canvas(W, H); M = int(W * 0.065); FOOT_H = 92
     light_panel(img, [0, 0, int(W * PANEL_W), H]); d = ImageDraw.Draw(img)
-    lw, lh = paste_logo(img, M, M - 8, 86); d = ImageDraw.Draw(img)
+    lw, lh = paste_logo(img, M, M - 8, 86, role="logo"); d = ImageDraw.Draw(img)
     y = M - 8 + lh + 28; y = kicker_line(img, d, M, y, 29, KICKER) + 22
     tf = osw_b(96)
     for ln in TITLE_LINES:
@@ -110,7 +110,7 @@ def render_9x16():
     top, bottom = safe_zone(img)
     light_panel(img, [0, top - 34, W, bottom + 16]); d = ImageDraw.Draw(img)
     y = top + 12
-    lw, lh = paste_logo(img, M, y, 92); d = ImageDraw.Draw(img)
+    lw, lh = paste_logo(img, M, y, 92, role="logo"); d = ImageDraw.Draw(img)
     y += lh + 32; y = kicker_line(img, d, M, y, 34, KICKER) + 26
     tf = osw_b(fit_size(d, TITLE, osw_b, W - 2 * M, 130))
     text(img, d, (M, y), TITLE, tf, INK, large=True, role="title"); th, off = bbox_h(d, TITLE, tf); y += th + off + 20
@@ -134,29 +134,38 @@ def render_9x16():
 
 
 def render_191x1():
-    W, H = 1200, 628; img = new_canvas(W, H); M = int(W * 0.05); FOOT_H = 70
-    light_panel(img, [0, 0, int(W * 0.63), H]); d = ImageDraw.Draw(img)
-    lw, lh = paste_logo(img, M, int(H * 0.07), 64); d = ImageDraw.Draw(img)
-    y = int(H * 0.07) + lh + 20; y = kicker_line(img, d, M, y, 24, KICKER) + 16
-    tf = osw_b(fit_size(d, TITLE, osw_b, int(W * 0.56), 84))
+    """Right column and search results. Facebook search results cuts this format to its
+    central square, so logo, kicker, title, subhead, bullets, chips and the footer URL
+    all sit inside x=286..914; the renderer fails the render otherwise. The motif and
+    the dimension line outside the square are decoration."""
+    W, H = 1200, 628; img = new_canvas(W, H); FOOT_H = 70
+    x0, _, x1, _ = safe_box(img)
+    M = x0 + 26; CW = x1 - 26 - M                    # the text column inside the square
+    light_panel(img, [x0 - 8, 0, x1 + 8, H]); d = ImageDraw.Draw(img)
+    y = 36
+    lw, lh = paste_logo(img, M, y, 60, role="logo"); d = ImageDraw.Draw(img)
+    y += lh + 18; y = kicker_line(img, d, M, y, 23, KICKER) + 12
+    tf = osw_b(fit_size(d, TITLE, osw_b, CW, 84))
     text(img, d, (M, y), TITLE, tf, INK, large=True, role="title"); th, off = bbox_h(d, TITLE, tf); y += th + off + 12
-    sf = osw_m(fit_size(d, SUBHEAD, osw_m, int(W * 0.56), 27))
-    text(img, d, (M, y), SUBHEAD, sf, TEXT_ACCENT, role="subhead"); sh, so = bbox_h(d, SUBHEAD, sf); y += sh + so + 18
+    sf = osw_m(fit_size(d, SUBHEAD, osw_m, CW, 27))
+    text(img, d, (M, y), SUBHEAD, sf, TEXT_ACCENT, role="subhead"); sh, so = bbox_h(d, SUBHEAD, sf); y += sh + so + 16
     bf = inter_m(25)
     for b in BULLETS_SHORT:
         d.rectangle([M, y + 8, M + 14, y + 22], fill=ACCENT)
-        text(img, d, (M + 28, y), b, bf, INK, role="bullet"); y += 37
+        text(img, d, (M + 28, y), b, bf, INK, role="bullet"); y += 36
     y += 6
-    y, rows = chip_row(img, d, M, y, CHIPS_SHORT, inter_sb(22), int(W * 0.56)); one_row(rows, "1.91x1")
+    y, rows = chip_row(img, d, M, y, CHIPS_SHORT, inter_sb(22), CW); one_row(rows, "1.91x1")
     fits(y, img, FOOT_H, "chips")
-    invoice_motif(img, int(W * 0.815), int(H * 0.445), int(W * 0.25), int(H * 0.60))
-    footer_band(img, FOOT_H); save(img, "1.91x1_1200x628")
+    # Outside the square: decoration only.
+    invoice_motif(img, (x1 + W) // 2 + 6, int(H * 0.445), 236, int(H * 0.56))
+    dimension_line(d, x0 // 2, 60, x0 // 2, H - FOOT_H - 60)
+    footer_band(img, FOOT_H, x=M, dot_x=x1 - 26); save(img, "1.91x1_1200x628")
 
 
 def render_4x5():
     W, H = 1080, 1350; img = new_canvas(W, H); M = int(W * 0.065); FOOT_H = 96
     light_panel(img, [0, 0, int(W * PANEL_W), H]); d = ImageDraw.Draw(img)
-    lw, lh = paste_logo(img, M, M, 92); d = ImageDraw.Draw(img)
+    lw, lh = paste_logo(img, M, M, 92, role="logo"); d = ImageDraw.Draw(img)
     y = M + lh + 36; y = kicker_line(img, d, M, y, 30, KICKER) + 28
     tf = osw_b(104)
     for ln in TITLE_LINES:
